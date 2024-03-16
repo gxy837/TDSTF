@@ -3,15 +3,15 @@ from tqdm import tqdm
 import numpy as np
 pd.set_option('mode.chained_assignment', None)
 
-mimic_data_dir = 'MIMICIII/'
+mimic_data_dir = 'data/MIMICIII/'
 
 # Get all ICU stays.
-icu = pd.read_csv(mimic_data_dir+'ICUSTAYS.csv', usecols=['SUBJECT_ID', 'HADM_ID', 'ICUSTAY_ID', 'INTIME', 'OUTTIME'])
+icu = pd.read_csv(mimic_data_dir+'ICUSTAYS.csv.gz', compression='gzip', usecols=['SUBJECT_ID', 'HADM_ID', 'ICUSTAY_ID', 'INTIME', 'OUTTIME'])
 icu = icu.loc[icu.INTIME.notna()]
 icu = icu.loc[icu.OUTTIME.notna()]
 
 # Filter out pediatric patients.
-pat = pd.read_csv(mimic_data_dir+'PATIENTS.csv', usecols=['SUBJECT_ID', 'DOB', 'DOD', 'GENDER'])
+pat = pd.read_csv(mimic_data_dir+'PATIENTS.csv.gz', compression='gzip', usecols=['SUBJECT_ID', 'DOB', 'DOD', 'GENDER'])
 icu = icu.merge(pat, on='SUBJECT_ID', how='left')
 icu['INTIME'] = pd.to_datetime(icu.INTIME)
 icu['DOB'] = pd.to_datetime(icu.DOB)
@@ -20,7 +20,7 @@ icu = icu.loc[icu.AGE>=18] #53k icustays
 
 # Extract chartevents for icu stays.
 ch = []
-for chunk in tqdm(pd.read_csv(mimic_data_dir+'CHARTEVENTS.csv', chunksize=10000000, low_memory = False,
+for chunk in tqdm(pd.read_csv(mimic_data_dir+'CHARTEVENTS.csv.gz', compression='gzip', chunksize=10000000, low_memory = False,
                 usecols = ['HADM_ID', 'ICUSTAY_ID', 'ITEMID', 'CHARTTIME', 'VALUE', 'VALUENUM', 'VALUEUOM', 'ERROR'])):
     chunk = chunk.loc[chunk.ICUSTAY_ID.isin(icu.ICUSTAY_ID)]
     chunk = chunk.loc[chunk['ERROR']!=1]
@@ -33,7 +33,7 @@ ch = ch.loc[~(ch.VALUE.isna() & ch.VALUENUM.isna())]
 ch['TABLE'] = 'chart'
 
 # Extract labevents for admissions.
-la = pd.read_csv(mimic_data_dir+'LABEVENTS.csv', usecols = ['HADM_ID', 'ITEMID', 'CHARTTIME', 'VALUE', 'VALUENUM', 'VALUEUOM'])
+la = pd.read_csv(mimic_data_dir+'LABEVENTS.csv.gz', compression='gzip', usecols = ['HADM_ID', 'ITEMID', 'CHARTTIME', 'VALUE', 'VALUENUM', 'VALUEUOM'])
 la = la.loc[la.HADM_ID.isin(icu.HADM_ID)]
 la.HADM_ID = la.HADM_ID.astype(int)
 la = la.loc[la.CHARTTIME.notna()]

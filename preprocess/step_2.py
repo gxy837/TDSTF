@@ -4,9 +4,12 @@ import numpy as np
 import pickle
 pd.set_option('mode.chained_assignment', None)
 
+mimic_data_dir = 'data/MIMICIII/'
+
+
 # Read extracted time series data.
-events = pd.read_csv('data/mimic_iii_events.csv', low_memory = False, usecols=['HADM_ID', 'ICUSTAY_ID', 'CHARTTIME', 'VALUENUM', 'TABLE', 'NAME'])
-icu = pd.read_csv('data/mimic_iii_icu.csv')
+events = pd.read_csv(mimic_data_dir + 'mimic_iii_events.csv.gz', compression='gzip', low_memory = False, usecols=['HADM_ID', 'ICUSTAY_ID', 'CHARTTIME', 'VALUENUM', 'TABLE', 'NAME'])
+icu = pd.read_csv(mimic_data_dir + 'mimic_iii_icu.csv.gz', compression='gzip')
 # Convert times to type datetime.
 events.CHARTTIME = pd.to_datetime(events.CHARTTIME)
 icu.INTIME = pd.to_datetime(icu.INTIME)
